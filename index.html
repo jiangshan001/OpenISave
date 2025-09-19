@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Finance Manager</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* CSS Custom Properties for theme colors */
+        :root {
+            --primary-color: #4f46e5;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+        }
+        
+        /* Main layout styles */
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .main-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+            max-width: 1200px;
+        }
+        
+        /* Navigation pills styling */
+        .nav-pills .nav-link {
+            border-radius: 50px;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-pills .nav-link.active {
+            background: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+        }
+        
+        /* Card component styles */
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Button styles */
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 25px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background: #4338ca;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+        }
+        
+        /* Form control styles */
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e5e7eb;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.25);
+        }
+        
+        /* Statistics card styles */
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card.income {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .stat-card.expense {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        
+        /* Transaction item styles */
+        .transaction-item {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--primary-color);
+            transition: all 0.2s ease;
+        }
+        
+        .transaction-item:hover {
+            background: #f1f5f9;
+            transform: translateX(5px);
+        }
+        
+        .income-item {
+            border-left-color: var(--success-color);
+        }
+        
+        .expense-item {
+            border-left-color: var(--danger-color);
+        }
+        
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Fade-in animation */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="main-container p-4">
+            <!-- Page Header -->
+            <div class="text-center mb-4">
+                <h1 class="display-4 mb-3">
+                    <i class="fas fa-wallet text-primary"></i>
+                    Personal Finance Manager
+                </h1>
+                <p class="text-muted">Track your income, expenses, and financial health</p>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <ul class="nav nav-pills justify-content-center mb-4" id="mainTabs">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#dashboard" data-bs-toggle="pill">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#rates" data-bs-toggle="pill">
+                        <i class="fas fa-coins me-2"></i>Exchange Rates
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#reports" data-bs-toggle="pill">
+                        <i class="fas fa-chart-bar me-2"></i>Reports
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- Dashboard Tab -->
+                <div class="tab-pane fade show active" id="dashboard">
+                    <!-- Summary Statistics -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="stat-card income">
+                                <h5><i class="fas fa-arrow-up me-2"></i>This Month Income</h5>
+                                <h2 id="monthlyIncome">¥0.00</h2>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card expense">
+                                <h5><i class="fas fa-arrow-down me-2"></i>This Month Expense</h5>
+                                <h2 id="monthlyExpense">¥0.00</h2>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <h5><i class="fas fa-balance-scale me-2"></i>Net Income</h5>
+                                <h2 id="netIncome">¥0.00</h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- All Transactions Section -->
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>All Transactions</h5>
+                                    <button class="btn btn-light btn-sm" onclick="loadAllTransactions()">
+                                        <i class="fas fa-refresh"></i> Refresh
+                                    </button>
+                                </div>
+                                <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                                    <div id="allTransactions">
+                                        <div class="text-center">
+                                            <div class="loading"></div>
+                                            <p class="mt-2">Loading transactions...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Add Transaction Section -->
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Quick Add Transaction</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="quickAddForm">
+                                        <div class="mb-3">
+                                            <label class="form-label">Date</label>
+                                            <input type="date" class="form-control" id="quickDate" required>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Type</label>
+                                            <div class="btn-group w-100" role="group">
+                                                <input type="radio" class="btn-check" name="quickType" id="quickExpense" value="expense" checked>
+                                                <label class="btn btn-outline-danger" for="quickExpense">Expense</label>
+                                                <input type="radio" class="btn-check" name="quickType" id="quickIncome" value="income">
+                                                <label class="btn btn-outline-success" for="quickIncome">Income</label>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Category</label>
+                                            <select class="form-select" id="quickCategory" required>
+                                                <option value="Grocery">Grocery</option>
+                                                <option value="Transport">Transport</option>
+                                                <option value="Shopping">Shopping</option>
+                                                <option value="Gift">Gift</option>
+                                                <option value="Phone Bill">Phone Bill</option>
+                                                <option value="Subscription">Subscription</option>
+                                                <option value="Travel">Travel</option>
+                                                <option value="Rent">Rent</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Amount</label>
+                                            <input type="number" class="form-control" id="quickAmount" step="0.01" required>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Currency</label>
+                                            <select class="form-select" id="quickCurrency" required>
+                                                <option value="CNY">CNY</option>
+                                                <option value="GBP">GBP</option>
+                                                <option value="USD">USD</option>
+                                                <option value="EUR">EUR</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Note (Optional)</label>
+                                            <textarea class="form-control" id="quickNote" rows="2" placeholder="Add a note..."></textarea>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="fas fa-plus me-2"></i>Add Transaction
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exchange Rates Tab -->
+                <div class="tab-pane fade" id="rates">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5 class="mb-0"><i class="fas fa-sync me-2"></i>Update Exchange Rates</h5>
+                                </div>
+                                <div class="card-body">
+                                    <button class="btn btn-warning w-100 mb-3" onclick="updateRatesFromAPI()">
+                                        <i class="fas fa-cloud-download-alt me-2"></i>Update from Internet
+                                    </button>
+                                    <div id="rateUpdateStatus" class="mt-2"></div>
+                                    <hr>
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Exchange rates are automatically updated daily.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5 class="mb-0"><i class="fas fa-coins me-2"></i>Current Exchange Rates</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="ratesList">
+                                        <div class="text-center">
+                                            <div class="loading"></div>
+                                            <p class="mt-2">Loading exchange rates...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reports Tab -->
+                <div class="tab-pane fade" id="reports">
+                    <div class="card">
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Monthly Financial Report</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label">Year</label>
+                                    <input type="number" class="form-control" id="reportYear" value="2024" min="2020" max="2030">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Month</label>
+                                    <select class="form-select" id="reportMonth">
+                                        <option value="1">January</option>
+                                        <option value="2">February</option>
+                                        <option value="3">March</option>
+                                        <option value="4">April</option>
+                                        <option value="5">May</option>
+                                        <option value="6">June</option>
+                                        <option value="7">July</option>
+                                        <option value="8">August</option>
+                                        <option value="9">September</option>
+                                        <option value="10">October</option>
+                                        <option value="11">November</option>
+                                        <option value="12">December</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <button class="btn btn-primary w-100" onclick="generateReport()">
+                                        <i class="fas fa-chart-line me-2"></i>Generate Report (All amounts in RMB)
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div id="reportContent">
+                                <div class="text-center text-muted">
+                                    <i class="fas fa-chart-bar fa-3x mb-3"></i>
+                                    <p>Select year and month, then click "Generate Report" to view your financial summary</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Transaction Modal -->
+    <div class="modal fade" id="editTransactionModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Transaction</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editTransactionForm">
+                        <input type="hidden" id="editTransactionId">
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Date</label>
+                            <input type="date" class="form-control" id="editDate" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Type</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="editType" id="editExpense" value="expense">
+                                <label class="btn btn-outline-danger" for="editExpense">Expense</label>
+                                <input type="radio" class="btn-check" name="editType" id="editIncome" value="income">
+                                <label class="btn btn-outline-success" for="editIncome">Income</label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" id="editCategory" required>
+                                <option value="Grocery">Grocery</option>
+                                <option value="Transport">Transport</option>
+                                <option value="Shopping">Shopping</option>
+                                <option value="Gift">Gift</option>
+                                <option value="Phone Bill">Phone Bill</option>
+                                <option value="Subscription">Subscription</option>
+                                <option value="Travel">Travel</option>
+                                <option value="Rent">Rent</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Amount</label>
+                            <input type="number" class="form-control" id="editAmount" step="0.01" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Currency</label>
+                            <select class="form-select" id="editCurrency" required>
+                                <option value="CNY">CNY</option>
+                                <option value="GBP">GBP</option>
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Note (Optional)</label>
+                            <textarea class="form-control" id="editNote" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveTransactionEdit()">
+                        <i class="fas fa-save me-2"></i>Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Toast Notification -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body" id="toastMessage">
+                    Operation successful!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Toast Notification -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="errorToast" class="toast align-items-center text-bg-danger border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body" id="errorMessage">
+                    An error occurred!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global variables to store application data
+        let transactions = [];
+        let rates = [];
+        
+        /**
+         * Initialize the application when DOM is loaded
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current date as default
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('quickDate').value = today;
+            
+            // Set current year and month for reports
+            document.getElementById('reportYear').value = new Date().getFullYear();
+            document.getElementById('reportMonth').value = new Date().getMonth() + 1;
+            
+            // Load initial data
+            loadAllTransactions();
+            loadExchangeRates();
+            loadDashboardStats();
+            
+            // Set up form event handlers
+            setupFormHandlers();
+            setupCategoryHandlers();
+        });
+        
+        /**
+         * API Helper function for making HTTP requests
+         */
+        async function apiCall(url, options = {}) {
+            console.log('Making API call to:', url, 'with options:', options);
+            
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                console.log('Response received:', response.status, response.statusText);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                return data;
+            } catch (error) {
+                console.error('API call failed:', error);
+                showError('Network error: ' + error.message);
+                throw error;
+            }
+        }
+        
+        /**
+         * Show success notification toast
+         */
+        function showSuccess(message) {
+            document.getElementById('toastMessage').textContent = message;
+            const toast = new bootstrap.Toast(document.getElementById('successToast'));
+            toast.show();
+        }
+        
+        /**
+         * Show error notification toast
+         */
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            const toast = new bootstrap.Toast(document.getElementById('errorToast'));
+            toast.show();
+        }
+        
+        /**
+         * Load and display all transactions
+         */
+        async function loadAllTransactions() {
+            try {
+                transactions = await apiCall('/api/transactions');
+                updateAllTransactionsDisplay();
+            } catch (error) {
+                console.error('Failed to load transactions:', error);
+                document.getElementById('allTransactions').innerHTML = 
+                    '<p class="text-danger text-center">Error loading transactions</p>';
+            }
+        }
+        
+        /**
+         * Convert any currency amount to RMB using current exchange rates
+         */
+        function convertToRMB(amount, fromCurrency) {
+            if (fromCurrency === 'CNY') {
+                return amount;
+            }
+            
+            // Find exchange rate from the currency to CNY
+            const rate = rates.find(r => r.from_currency === fromCurrency && r.to_currency === 'CNY');
+            
+            if (rate) {
+                return amount * rate.rate;
+            } else {
+                // Fallback rates if API rates not available
+                const fallbackRates = {
+                    'USD': 7.2,
+                    'EUR': 7.8,
+                    'GBP': 9.1,
+                    'JPY': 0.048
+                };
+                
+                return amount * (fallbackRates[fromCurrency] || 1);
+            }
+        }
+        
+        /**
+         * Update the all transactions display with edit/delete functionality
+         */
+        function updateAllTransactionsDisplay() {
+            const container = document.getElementById('allTransactions');
+            
+            if (transactions.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center">No transactions found. Add your first transaction!</p>';
+                return;
+            }
+            
+            let html = '';
+            transactions.forEach(tx => {
+                const isIncome = tx.type === 'income';
+                const itemClass = isIncome ? 'income-item' : 'expense-item';
+                const amountClass = isIncome ? 'text-success' : 'text-danger';
+                const icon = isIncome ? 'fa-arrow-up' : 'fa-arrow-down';
+                const amountInRMB = convertToRMB(tx.amount, tx.currency);
+                
+                html += `
+                    <div class="transaction-item ${itemClass} fade-in" data-id="${tx.id}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-1">
+                                    <i class="fas ${icon} me-2 ${amountClass}"></i>
+                                    <strong>${tx.category}</strong>
+                                    <span class="badge bg-secondary ms-2">${tx.type}</span>
+                                </div>
+                                <small class="text-muted">
+                                    ${tx.date}
+                                    ${tx.note ? ' • ' + tx.note : ''}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <div class="${amountClass} fw-bold">
+                                    ${isIncome ? '+' : '-'}${tx.amount.toFixed(2)} ${tx.currency}
+                                </div>
+                                ${tx.currency !== 'CNY' ? 
+                                    `<div class="text-muted small">≈ ¥${amountInRMB.toFixed(2)}</div>` : ''}
+                                <div class="mt-2">
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editTransaction(${tx.id})">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteTransaction(${tx.id})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        /**
+         * Delete a transaction
+         */
+        async function deleteTransaction(transactionId) {
+            if (!confirm('Are you sure you want to delete this transaction? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                await apiCall(`/api/transactions/${transactionId}`, { method: 'DELETE' });
+                showSuccess('Transaction deleted successfully!');
+                await refreshAllData();
+            } catch (error) {
+                console.error('Error deleting transaction:', error);
+                showError('Failed to delete transaction: ' + error.message);
+            }
+        }
+        
+        /**
+         * Edit a transaction - open modal with existing data
+         */
+        function editTransaction(transactionId) {
+            const transaction = transactions.find(tx => tx.id === transactionId);
+            if (!transaction) {
+                showError('Transaction not found');
+                return;
+            }
+            
+            // Populate the edit form
+            document.getElementById('editTransactionId').value = transaction.id;
+            document.getElementById('editDate').value = transaction.date;
+            document.getElementById('editAmount').value = transaction.amount;
+            document.getElementById('editCurrency').value = transaction.currency;
+            document.getElementById('editNote').value = transaction.note || '';
+            document.getElementById('editCategory').value = transaction.category;
+            
+            // Set transaction type
+            if (transaction.type === 'income') {
+                document.getElementById('editIncome').checked = true;
+                updateCategoryOptions('editCategory', ['Salary', 'Bonus', 'Part-time', 'Interest', 'Gift', 'Investment', 'Freelance', 'Refund', 'Other']);
+            } else {
+                document.getElementById('editExpense').checked = true;
+                updateCategoryOptions('editCategory', ['Food', 'Transport', 'Rent', 'Utilities', 'Entertainment', 'Groceries', 'Health', 'Clothing', 'Education', 'Shopping', 'Travel', 'Gift', 'Insurance', 'Phone', 'Internet', 'Subscription', 'Other']);
+            }
+            
+            // Set the category after updating options
+            setTimeout(() => {
+                document.getElementById('editCategory').value = transaction.category;
+            }, 10);
+            
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('editTransactionModal'));
+            modal.show();
+        }
+        
+        /**
+         * Save the edited transaction
+         */
+        async function saveTransactionEdit() {
+            const transactionId = document.getElementById('editTransactionId').value;
+            const formData = {
+                date: document.getElementById('editDate').value,
+                type: document.querySelector('input[name="editType"]:checked').value,
+                category: document.getElementById('editCategory').value,
+                amount: parseFloat(document.getElementById('editAmount').value),
+                currency: document.getElementById('editCurrency').value,
+                note: document.getElementById('editNote').value
+            };
+            
+            try {
+                await apiCall(`/api/transactions/${transactionId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(formData)
+                });
+                
+                showSuccess('Transaction updated successfully!');
+                
+                // Close the modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editTransactionModal'));
+                modal.hide();
+                
+                // Refresh data
+                await refreshAllData();
+                
+            } catch (error) {
+                console.error('Error updating transaction:', error);
+                showError('Failed to update transaction: ' + error.message);
+            }
+        }
+        
+        /**
+         * Load and display exchange rates from real API
+         */
+        async function loadExchangeRates() {
+            try {
+                // Use real exchange rate API
+                const response = await fetch('https://api.exchangerate-api.com/v4/latest/CNY');
+                const data = await response.json();
+                
+                // Convert API response to our format
+                rates = [];
+                const currencies = ['USD', 'EUR', 'GBP', 'JPY'];
+                
+                currencies.forEach(currency => {
+                    if (data.rates[currency]) {
+                        // Convert from CNY to other currency
+                        rates.push({
+                            from_currency: 'CNY',
+                            to_currency: currency,
+                            rate: data.rates[currency],
+                            date: new Date().toISOString().split('T')[0]
+                        });
+                        
+                        // Convert from other currency to CNY
+                        rates.push({
+                            from_currency: currency,
+                            to_currency: 'CNY',
+                            rate: 1 / data.rates[currency],
+                            date: new Date().toISOString().split('T')[0]
+                        });
+                    }
+                });
+                
+                updateExchangeRatesDisplay();
+            } catch (error) {
+                console.error('Failed to load exchange rates:', error);
+                document.getElementById('ratesList').innerHTML = 
+                    '<p class="text-danger text-center">Error loading exchange rates. Using fallback rates.</p>';
+                
+                // Use fallback rates if API fails
+                rates = [
+                    { from_currency: 'USD', to_currency: 'CNY', rate: 7.24, date: new Date().toISOString().split('T')[0] },
+                    { from_currency: 'EUR', to_currency: 'CNY', rate: 7.85, date: new Date().toISOString().split('T')[0] },
+                    { from_currency: 'GBP', to_currency: 'CNY', rate: 9.15, date: new Date().toISOString().split('T')[0] }
+                ];
+                updateExchangeRatesDisplay();
+            }
+        }
+        
+        /**
+         * Update the exchange rates display
+         */
+        function updateExchangeRatesDisplay() {
+            const container = document.getElementById('ratesList');
+            
+            if (rates.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center">No exchange rates available. Update from internet to get current rates.</p>';
+                return;
+            }
+            
+            let html = `
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Rate</th>
+                                <th>Last Updated</th>
+                                <th>Source</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            rates.forEach(rate => {
+                html += `
+                    <tr>
+                        <td><span class="badge bg-primary">${rate.from_currency}</span></td>
+                        <td><span class="badge bg-secondary">${rate.to_currency}</span></td>
+                        <td class="fw-bold">${rate.rate.toFixed(4)}</td>
+                        <td>${rate.date}</td>
+                        <td><span class="badge bg-success">API</span></td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+        
+        /**
+         * Load and update dashboard statistics
+         */
+        async function loadDashboardStats() {
+            try {
+                const data = await apiCall('/api/dashboard');
+                updateDashboardDisplay(data);
+            } catch (error) {
+                console.error('Failed to load dashboard stats:', error);
+            }
+        }
+        
+        /**
+         * Update dashboard statistics display with currency conversion
+         */
+        function updateDashboardDisplay(data) {
+            let monthlyIncomeRMB = 0;
+            let monthlyExpenseRMB = 0;
+            
+            // Calculate totals by converting all currencies to RMB
+            transactions.forEach(tx => {
+                const currentMonth = new Date().getMonth() + 1;
+                const currentYear = new Date().getFullYear();
+                const txDate = new Date(tx.date);
+                
+                // Only include current month transactions
+                if (txDate.getMonth() + 1 === currentMonth && txDate.getFullYear() === currentYear) {
+                    const amountInRMB = convertToRMB(tx.amount, tx.currency);
+                    
+                    if (tx.type === 'income') {
+                        monthlyIncomeRMB += amountInRMB;
+                    } else {
+                        monthlyExpenseRMB += amountInRMB;
+                    }
+                }
+            });
+            
+            document.getElementById('monthlyIncome').textContent = `¥${monthlyIncomeRMB.toFixed(2)}`;
+            document.getElementById('monthlyExpense').textContent = `¥${monthlyExpenseRMB.toFixed(2)}`;
+            document.getElementById('netIncome').textContent = `¥${(monthlyIncomeRMB - monthlyExpenseRMB).toFixed(2)}`;
+        }
+        
+        /**
+         * Set up form event handlers
+         */
+        function setupFormHandlers() {
+            // Quick add transaction form handler
+            const form = document.getElementById('quickAddForm');
+            console.log('Setting up form handler for:', form);
+            
+            form.addEventListener('submit', async function(e) {
+                console.log('Form submit event triggered');
+                e.preventDefault();
+                
+                // Debug: check if preventDefault worked
+                console.log('Form submission prevented');
+                
+                const formData = {
+                    date: document.getElementById('quickDate').value,
+                    type: document.querySelector('input[name="quickType"]:checked').value,
+                    category: document.getElementById('quickCategory').value,
+                    amount: parseFloat(document.getElementById('quickAmount').value),
+                    currency: document.getElementById('quickCurrency').value,
+                    note: document.getElementById('quickNote').value
+                };
+                
+                console.log('Form data to send:', formData);
+                
+                try {
+                    console.log('Making API call to add transaction...');
+                    const result = await apiCall('/api/transactions', {
+                        method: 'POST',
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    console.log('API call successful:', result);
+                    showSuccess('Transaction added successfully!');
+                    
+                    // Reset form but keep the date
+                    const currentDate = document.getElementById('quickDate').value;
+                    this.reset();
+                    document.getElementById('quickDate').value = currentDate;
+                    
+                    // Refresh data automatically
+                    console.log('Refreshing data...');
+                    await refreshAllData();
+                    
+                } catch (error) {
+                    console.error('Error adding transaction:', error);
+                    showError('Failed to add transaction: ' + error.message);
+                }
+            });
+        }
+        
+        /**
+         * Set up category selection handlers based on transaction type
+         */
+        function setupCategoryHandlers() {
+            const expenseCategories = ['Food', 'Transport', 'Rent', 'Utilities', 'Entertainment', 'Groceries', 'Health', 'Clothing', 'Education', 'Shopping', 'Travel', 'Gift', 'Insurance', 'Phone', 'Internet', 'Subscription', 'Other'];
+            const incomeCategories = ['Salary', 'Bonus', 'Part-time', 'Interest', 'Gift', 'Investment', 'Freelance', 'Refund', 'Other'];
+            
+            // Handle type change for quick add form
+            document.querySelectorAll('input[name="quickType"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const isIncome = this.value === 'income';
+                    updateCategoryOptions('quickCategory', isIncome ? incomeCategories : expenseCategories);
+                });
+            });
+            
+            // Handle type change for edit form
+            document.querySelectorAll('input[name="editType"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const isIncome = this.value === 'income';
+                    updateCategoryOptions('editCategory', isIncome ? incomeCategories : expenseCategories);
+                });
+            });
+            
+            // Initialize with expense categories for both forms
+            updateCategoryOptions('quickCategory', expenseCategories);
+            updateCategoryOptions('editCategory', expenseCategories);
+        }
+        
+        /**
+         * Update category options based on transaction type
+         */
+        function updateCategoryOptions(selectId, categories) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '';
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                select.appendChild(option);
+            });
+        }
+        
+        /**
+         * Update exchange rates from real API
+         */
+        async function updateRatesFromAPI() {
+            const statusDiv = document.getElementById('rateUpdateStatus');
+            statusDiv.innerHTML = '<div class="text-info"><i class="fas fa-spinner fa-spin me-2"></i>Updating exchange rates...</div>';
+            
+            try {
+                // Fetch fresh rates
+                await loadExchangeRates();
+                statusDiv.innerHTML = '<div class="text-success"><i class="fas fa-check me-2"></i>Exchange rates updated successfully!</div>';
+                
+                // Clear status after 2 seconds
+                setTimeout(() => {
+                    statusDiv.innerHTML = '';
+                }, 2000);
+                
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="text-danger"><i class="fas fa-times me-2"></i>Failed to update exchange rates</div>';
+                setTimeout(() => statusDiv.innerHTML = '', 3000);
+            }
+        }
+        
+        /**
+         * Generate monthly financial report with RMB conversion
+         */
+        async function generateReport() {
+            const year = parseInt(document.getElementById('reportYear').value);
+            const month = parseInt(document.getElementById('reportMonth').value);
+            
+            const container = document.getElementById('reportContent');
+            container.innerHTML = '<div class="text-center"><div class="loading"></div><p class="mt-2">Generating report...</p></div>';
+            
+            try {
+                // Calculate totals from local transactions with currency conversion
+                let incomeTotal = 0;
+                let expenseTotal = 0;
+                let incomeByCategory = {};
+                let expenseByCategory = {};
+                
+                transactions.forEach(tx => {
+                    const txDate = new Date(tx.date);
+                    if (txDate.getFullYear() === year && txDate.getMonth() + 1 === month) {
+                        const amountInRMB = convertToRMB(tx.amount, tx.currency);
+                        
+                        if (tx.type === 'income') {
+                            incomeTotal += amountInRMB;
+                            incomeByCategory[tx.category] = (incomeByCategory[tx.category] || 0) + amountInRMB;
+                        } else {
+                            expenseTotal += amountInRMB;
+                            expenseByCategory[tx.category] = (expenseByCategory[tx.category] || 0) + amountInRMB;
+                        }
+                    }
+                });
+                
+                const netTotal = incomeTotal - expenseTotal;
+                
+                let html = `
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-arrow-up fa-2x mb-2"></i>
+                                    <h5>Total Income</h5>
+                                    <h3>¥${incomeTotal.toFixed(2)}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-danger text-white">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-arrow-down fa-2x mb-2"></i>
+                                    <h5>Total Expense</h5>
+                                    <h3>¥${expenseTotal.toFixed(2)}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card ${netTotal >= 0 ? 'bg-primary' : 'bg-warning'} text-white">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-balance-scale fa-2x mb-2"></i>
+                                    <h5>Net Income</h5>
+                                    <h3>¥${netTotal.toFixed(2)}</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Add category breakdown for expenses
+                if (Object.keys(expenseByCategory).length > 0) {
+                    html += `
+                        <div class="card mb-4">
+                            <div class="card-header bg-dark text-white">
+                                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Expense Breakdown by Category</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                    `;
+                    
+                    for (const [category, amount] of Object.entries(expenseByCategory)) {
+                        const percentage = expenseTotal > 0 ? ((amount / expenseTotal) * 100).toFixed(1) : 0;
+                        html += `
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                                    <span class="fw-semibold">${category}:</span>
+                                    <div class="text-end">
+                                        <div class="fw-bold text-danger">¥${amount.toFixed(2)}</div>
+                                        <small class="text-muted">${percentage}%</small>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    html += `
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Add category breakdown for income
+                if (Object.keys(incomeByCategory).length > 0) {
+                    html += `
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Income Breakdown by Category</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                    `;
+                    
+                    for (const [category, amount] of Object.entries(incomeByCategory)) {
+                        const percentage = incomeTotal > 0 ? ((amount / incomeTotal) * 100).toFixed(1) : 0;
+                        html += `
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                                    <span class="fw-semibold">${category}:</span>
+                                    <div class="text-end">
+                                        <div class="fw-bold text-success">¥${amount.toFixed(2)}</div>
+                                        <small class="text-muted">${percentage}%</small>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    html += `
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                container.innerHTML = html;
+                
+            } catch (error) {
+                container.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>Failed to generate report. Please try again.</div>';
+            }
+        }
+        
+        /**
+         * Refresh all data sections after adding a transaction
+         * This ensures real-time updates across the application
+         */
+        async function refreshAllData() {
+            try {
+                // Refresh transactions list
+                await loadAllTransactions();
+                
+                // Refresh dashboard statistics
+                await loadDashboardStats();
+                
+                // If we're on the reports tab and have current month/year selected, auto-refresh report
+                const reportTab = document.querySelector('a[href="#reports"]');
+                if (reportTab && reportTab.classList.contains('active')) {
+                    const currentMonth = new Date().getMonth() + 1;
+                    const currentYear = new Date().getFullYear();
+                    const selectedMonth = parseInt(document.getElementById('reportMonth').value);
+                    const selectedYear = parseInt(document.getElementById('reportYear').value);
+                    
+                    // Only auto-refresh if showing current month's report
+                    if (selectedMonth === currentMonth && selectedYear === currentYear) {
+                        await generateReport();
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+            }
+        }
+        
+        /**
+         * Tab change handler to refresh data when switching tabs
+         */
+        document.addEventListener('shown.bs.tab', function(event) {
+            const targetTab = event.target.getAttribute('href');
+            
+            switch(targetTab) {
+                case '#dashboard':
+                    loadAllTransactions();
+                    loadDashboardStats();
+                    break;
+                case '#rates':
+                    loadExchangeRates();
+                    break;
+                case '#reports':
+                    // Set current month/year when switching to reports tab
+                    const now = new Date();
+                    document.getElementById('reportYear').value = now.getFullYear();
+                    document.getElementById('reportMonth').value = now.getMonth() + 1;
+                    break;
+            }
+        });
+        
+        /**
+         * Utility function to format currency display
+         * @param {number} amount - The amount to format
+         * @param {string} currency - The currency code
+         * @returns {string} - Formatted currency string
+         */
+        function formatCurrency(amount, currency) {
+            const symbols = {
+                'CNY': '¥',
+                'USD': '$',
+                'EUR': '€',
+                'GBP': '£',
+                'JPY': '¥'
+            };
+            
+            const symbol = symbols[currency] || currency;
+            return `${symbol}${amount.toFixed(2)}`;
+        }
+        
+        /**
+         * Form validation helper
+         * @param {HTMLFormElement} form - The form to validate
+         * @returns {boolean} - Whether the form is valid
+         */
+        function validateForm(form) {
+            const requiredFields = form.querySelectorAll('[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+            
+            return isValid;
+        }
+        
+        // Add event listeners for form validation styling
+        document.querySelectorAll('input, select, textarea').forEach(element => {
+            element.addEventListener('input', function() {
+                this.classList.remove('is-invalid');
+            });
+        });
+        
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            // Ctrl+N or Cmd+N to focus on quick add amount field
+            if ((event.ctrlKey || event.metaKey) && event.key === 'n') {
+                event.preventDefault();
+                document.getElementById('quickAmount').focus();
+            }
+            
+            // Ctrl+R or Cmd+R to refresh transactions (prevent browser refresh)
+            if ((event.ctrlKey || event.metaKey) && event.key === 'r') {
+                event.preventDefault();
+                loadAllTransactions();
+            }
+        });
+        
+        // Console log for debugging
+        console.log('Personal Finance Manager loaded successfully!');
+    </script>
+</body>
+</html>
