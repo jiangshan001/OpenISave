@@ -212,6 +212,61 @@ def api_add_transaction():
         conn.commit()
     return jsonify({'id': tx_id, 'message': 'Transaction added successfully'})
 
+@app.route('/api/transactions/<int:tx_id>', methods=['PUT'])
+def api_update_transaction(tx_id):
+    data = request.json or {}
+    with get_db_conn() as conn:
+        exists = conn.execute('SELECT 1 FROM transactions WHERE id = ?', (tx_id,)).fetchone()
+        if not exists:
+            return jsonify({'error': 'transaction not found'}), 404
+
+        fields, params = [], []
+        if 'date' in data:
+            try:
+                d = parse_iso_date(data['date'])
+                fields.append('date = ?'); params.append(d.isoformat())
+            except ValueError as e:
+                return jsonify({'error': str(e)}), 400
+        if 'type' in data:
+            t = data['type'].lower().strip()
+            if t not in ALLOWED_TYPES:
+                return jsonify({'error': f'invalid type (allowed: {sorted(ALLOWED_TYPES)})'}), 400
+            fields.append('type = ?'); params.append(t)
+        if 'category' in data:
+            fields.append('category = ?'); params.append(data['category'])
+        if 'amount' in data:
+            try:
+                amt = float(data['amount'])
+                if amt <= 0: raise ValueError()
+            except:
+                return jsonify({'error': 'Invalid amount'}), 400
+            fields.append('amount = ?'); params.append(amt)
+        if 'currency' in data:
+            cur = data['currency'].upper()
+            if cur not in CURRENCIES:
+                return jsonify({'error': f'Unsupported currency: {cur}'}), 400
+            fields.append('currency = ?'); params.append(cur)
+        if 'note' in data:
+            fields.append('note = ?'); params.append(data['note'])
+
+        if not fields:
+            return jsonify({'error': 'no valid fields to update'}), 400
+
+        params.append(tx_id)
+        conn.execute(f'UPDATE transactions SET {", ".join(fields)} WHERE id = ?', params)
+        conn.commit()
+    return jsonify({'message': 'Transaction updated'}), 200
+
+
+@app.route('/api/transactions/<int:tx_id>', methods=['DELETE'])
+def api_delete_transaction(tx_id):
+    with get_db_conn() as conn:
+        cur = conn.execute('DELETE FROM transactions WHERE id = ?', (tx_id,))
+        conn.commit()
+        if cur.rowcount == 0:
+            return jsonify({'error': 'transaction not found'}), 404
+    return jsonify({'message': 'Transaction deleted'}), 200
+
 @app.route('/api/exchange-rates', methods=['GET'])
 def api_get_rates():
     return jsonify(get_exchange_rates())
